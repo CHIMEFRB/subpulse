@@ -1,0 +1,7 @@
+# Defaults
+default:
+  backend:
+    name: /subpulse
+  components:
+    blueprints:
+      - subpulse.backend.rest
