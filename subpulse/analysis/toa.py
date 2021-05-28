@@ -47,7 +47,7 @@ def parameters(
     # Convert
     toas = np.array(arrivals) * 0.001
     # np.empty is ~100x faster than np.zeros
-    errors = np.empty(len(toas)) * 0.001
+    errors = np.zeros(len(toas)) * 0.001
     differences = np.empty(len(toas) - 1, dtype=float)
 
     for index in np.arange(0, len(toas) - 1, 1):
@@ -88,15 +88,29 @@ def simulate(simulations: int, differences: np.ndarray, minimum: int, maximum: i
     return differences_mc, toas_mc, errors_mc
 
 
-def save(data: np.ndarray, event: int) -> None:
+def save(data: np.ndarray, filename: str) -> None:
     pass
 
 
-def execute():
+def execute(
+    event: int,
+    arrivals: List[float],
+    chi: float,
+    processors: int,
+    simulations: int = 1e6,
+    cluster: bool = False,
+):
     np.random.seed(quantumrandom.get_data()[0])
     grid = frequency_grid()
+    workload, toas, errors, differences, minimum, maximum = parameters(
+        arrivals=arrivals,
+        chi=chi,
+        processors=processors,
+        simulations=simulations,
+    )
     differences, toas, errors = simulate()
     max_z12_power = np.empty(len(toas))
+
     for index in np.arange(0, len(toas), 1):
         toa = toas[index]
         error = errors[index]
@@ -104,3 +118,8 @@ def execute():
         max_index = np.argmax(z1)
         max_period = 1.0 / grid[max_index]
         max_z12_power[index] = z1[max_index]
+
+    # TODO: Proper filepath on cluster / home computer
+    # /chime/intensity/processed/<subpulse>/<event_number>/<chi>/<name.npz>
+    filename = f"mc_{event}_s{simulations}_p{processors}.npz"
+    save(max_z12_power, filename)
