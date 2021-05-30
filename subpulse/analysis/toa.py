@@ -89,7 +89,7 @@ def simulate(simulations: int, differences: np.ndarray, minimum: int, maximum: i
 
 
 def save(data: np.ndarray, filename: str) -> None:
-    pass
+    np.savez(filename, max_z12_power=data)
 
 
 def execute(
@@ -108,18 +108,21 @@ def execute(
         processors=processors,
         simulations=simulations,
     )
-    differences, toas, errors = simulate()
-    max_z12_power = np.empty(len(toas))
+    differences_mc, toas_mc, errors_mc = simulate(simulations, differences, minimum, maximum)
+    max_z12_power = np.empty(len(toas_mc))
 
-    for index in np.arange(0, len(toas), 1):
-        toa = toas[index]
-        error = errors[index]
+    for index in np.arange(0, len(toas_mc), 1):
+        toa = toas_mc[index]
+        error = errors_mc[index]
         z1 = z2search(toa, error, grid)
         max_index = np.argmax(z1)
         max_period = 1.0 / grid[max_index]
         max_z12_power[index] = z1[max_index]
-
-    # TODO: Proper filepath on cluster / home computer
-    # /chime/intensity/processed/<subpulse>/<event_number>/<chi>/<name.npz>
-    filename = f"mc_{event}_s{simulations}_p{processors}.npz"
-    save(max_z12_power, filename)
+    
+    if (cluster == True):
+        # TODO: Proper filepath on cluster / home computer
+        # /chime/intensity/processed/<subpulse>/<event_number>/<chi>/<name.npz>
+        pass
+    else:
+        filename = f"mc_{event}_s{simulations}_p{processors}.npz"
+        save(max_z12_power, filename)
