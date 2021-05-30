@@ -81,10 +81,15 @@ def simulate(simulations: int, differences: np.ndarray, minimum: int, maximum: i
 
     for index in np.arange(0, int(simulations), 1):
         differences_mc[index] = np.random.uniform(minimum, maximum, len(differences))
-
+    
     for index in np.arange(0, len(differences_mc), 1):
-        for pointer in np.arange(0, len(differences_mc[index]) + 1, 1):
-            toas_mc[index, 1:] = np.cumsum(differences_mc[index, 0:pointer])
+        toas_mc[index, 1:] = np.cumsum(differences_mc[index, :])
+    
+    # There's a bug in this refactored implementation, but doesn't the above code do the same thing?
+    #for index in np.arange(0, len(differences_mc), 1):
+    #    for pointer in np.arange(0, len(differences_mc[index]) + 1, 1):
+    #        toas_mc[index, 1:] = np.cumsum(differences_mc[index, 0:pointer])
+    
     return differences_mc, toas_mc, errors_mc
 
 
@@ -112,6 +117,7 @@ def execute(
     max_z12_power = np.empty(len(toas_mc))
 
     for index in np.arange(0, len(toas_mc), 1):
+        print("Sim %i" % index)
         toa = toas_mc[index]
         error = errors_mc[index]
         z1 = z2search(toa, error, grid)
