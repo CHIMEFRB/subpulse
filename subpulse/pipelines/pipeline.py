@@ -2,7 +2,7 @@
 import click
 
 import sys
-sys.path.append("/data/user-data/pearlman/analysis/subpulse/subpulse/analysis")
+sys.path.append("../analysis")
 import toa
 
 @click.command()
