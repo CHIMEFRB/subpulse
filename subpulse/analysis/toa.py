@@ -1,8 +1,6 @@
-import multiprocessing as mp
-import threading
+import logging
 import time
-from multiprocessing import Process
-from threading import Thread
+from pathlib import Path
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -10,22 +8,33 @@ import numpy as np
 import quantumrandom
 import stingray.lightcurve as lightcurve
 import stingray.pulse.pulsar as plsr
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-from astropy.io import fits
-from astropy.modeling import fitting, models
-from astropy.modeling.functional_models import Gaussian2D
 from numba import jit
-from scipy import signal
-from scipy.signal import argrelextrema
-from stingray.utils import poisson_symmetrical_errors
+
+log = logging.getLogger(__name__)
 
 
+@jit(nopython=True)
 def frequency_grid(
     resolution: float = 0.32768 * 1.0e-3,
     samples: float = 250.0,
     oversample: int = 5,
 ) -> np.ndarray:
+    """[summary]
+
+    Parameters
+    ----------
+    resolution : float, optional
+        [description], by default 0.32768*1.0e-3
+    samples : float, optional
+        [description], by default 250.0
+    oversample : int, optional
+        [description], by default 5
+
+    Returns
+    -------
+    np.ndarray
+        [description]
+    """
     duration = samples * resolution
     spacing = 1.0 / duration
     sampling = 1.0 / resolution
@@ -37,12 +46,31 @@ def frequency_grid(
     )
 
 
+@jit(nopython=True)
 def parameters(
     arrivals: List[float],
     chi: float,
     processors: int,
-    simulations: int = 1e6,
+    simulations: int = int(1e6),
 ):
+    """[summary]
+
+    Parameters
+    ----------
+    arrivals : List[float]
+        [description]
+    chi : float
+        [description]
+    processors : int
+        [description]
+    simulations : int, optional
+        [description], by default 1e6
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
     workload = int(simulations / processors)
     # Convert
     toas = np.array(arrivals) * 0.001
@@ -59,6 +87,22 @@ def parameters(
 
 
 def z2search(toas: np.ndarray, errors: np.ndarray, grid: np.ndarray) -> np.ndarray:
+    """[summary]
+
+    Parameters
+    ----------
+    toas : np.ndarray
+        [description]
+    errors : np.ndarray
+        [description]
+    grid : np.ndarray
+        [description]
+
+    Returns
+    -------
+    np.ndarray
+        [description]
+    """
     lc = lightcurve.Lightcurve(toas, np.ones(len(toas)), err=errors)
     z1 = np.empty(grid.size, dtype=float)
     for index in np.arange(0, len(grid), 1):
@@ -68,6 +112,15 @@ def z2search(toas: np.ndarray, errors: np.ndarray, grid: np.ndarray) -> np.ndarr
 
 
 def plot(z1: np.ndarray, grid: np.ndarray) -> None:
+    """[summary]
+
+    Parameters
+    ----------
+    z1 : np.ndarray
+        [description]
+    grid : np.ndarray
+        [description]
+    """
     plt.figure()
     plt.plot(np.divide(1.0, grid), z1)
     plt.show()
@@ -75,25 +128,39 @@ def plot(z1: np.ndarray, grid: np.ndarray) -> None:
 
 @jit(nopython=True)
 def simulate(simulations: int, differences: np.ndarray, minimum: int, maximum: int):
+    """[summary]
+
+    Parameters
+    ----------
+    simulations : int
+        [description]
+    differences : np.ndarray
+        [description]
+    minimum : int
+        [description]
+    maximum : int
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
     differences_mc = np.empty((int(simulations), len(differences)))
     toas_mc = np.empty((int(simulations), len(differences) + 1))
     errors_mc = np.empty((int(simulations), len(differences) + 1))
 
     for index in np.arange(0, int(simulations), 1):
         differences_mc[index] = np.random.uniform(minimum, maximum, len(differences))
-    
+
     for index in np.arange(0, len(differences_mc), 1):
         toas_mc[index, 1:] = np.cumsum(differences_mc[index, :])
-    
-    # There's a bug in this refactored implementation, but doesn't the above code do the same thing?
-    #for index in np.arange(0, len(differences_mc), 1):
-    #    for pointer in np.arange(0, len(differences_mc[index]) + 1, 1):
-    #        toas_mc[index, 1:] = np.cumsum(differences_mc[index, 0:pointer])
-    
+
     return differences_mc, toas_mc, errors_mc
 
 
-def save(data: np.ndarray, filename: str) -> None:
+def save(data: np.ndarray, savepath: Path) -> None:
+    filename = savepath.absolute().as_posix()
     np.savez(filename, max_z12_power=data)
 
 
@@ -102,9 +169,29 @@ def execute(
     arrivals: List[float],
     chi: float,
     processors: int,
-    simulations: int = 1e6,
+    simulations: int = int(1e6),
     cluster: bool = False,
-):
+    fingerprint: str = str(int(time.time())),
+) -> None:
+    """[summary]
+
+    Parameters
+    ----------
+    event : int
+        [description]
+    arrivals : List[float]
+        [description]
+    chi : float
+        [description]
+    processors : int
+        [description]
+    simulations : int, optional
+        [description], by default 1e6
+    cluster : bool, optional
+        [description], by default False
+    fingerprint : str, optional
+        id for each run, by default str(int(time.time()))
+    """
     np.random.seed(quantumrandom.get_data()[0])
     grid = frequency_grid()
     workload, toas, errors, differences, minimum, maximum = parameters(
@@ -113,22 +200,28 @@ def execute(
         processors=processors,
         simulations=simulations,
     )
-    differences_mc, toas_mc, errors_mc = simulate(simulations, differences, minimum, maximum)
+    differences_mc, toas_mc, errors_mc = simulate(
+        simulations, differences, minimum, maximum
+    )
     max_z12_power = np.empty(len(toas_mc))
 
     for index in np.arange(0, len(toas_mc), 1):
-        print("Sim %i" % index)
+        log.info(f"Simulation: {index}")
         toa = toas_mc[index]
         error = errors_mc[index]
         z1 = z2search(toa, error, grid)
         max_index = np.argmax(z1)
         max_period = 1.0 / grid[max_index]
         max_z12_power[index] = z1[max_index]
-    
-    if (cluster == True):
-        # TODO: Proper filepath on cluster / home computer
-        # /chime/intensity/processed/<subpulse>/<event_number>/<chi>/<name.npz>
-        pass
+
+    filename = f"mc_{event}_nsim{simulations}_proc{processors}_chi{chi}.npz"
+
+    if cluster:
+        base_path = Path(f"/chime/intensity/processed/subpulse/{event}/{fingerprint}")
     else:
-        filename = f"mc_{event}_nsim{simulations}_proc{processors}_chi{chi}.npz"
-        save(max_z12_power, filename)
+        base_path = Path(".")
+
+    savepath = base_path.absolute().joinpath(
+        f"mc_{event}_nsim{simulations}_proc{processors}_chi{chi}.npz"
+    )
+    save(max_z12_power, savepath)
