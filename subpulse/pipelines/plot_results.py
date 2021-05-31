@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 
-data = np.load("mc_65777546_s1000000_p1.npz")
+data = np.load("mc_65777546_nsim1000000_proc1_chi0.2.npz")
 
 max_z12_power = data["max_z12_power"]
 print(len(max_z12_power))
