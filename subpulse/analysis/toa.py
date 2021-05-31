@@ -130,5 +130,5 @@ def execute(
         # /chime/intensity/processed/<subpulse>/<event_number>/<chi>/<name.npz>
         pass
     else:
-        filename = f"mc_{event}_s{simulations}_p{processors}.npz"
+        filename = f"mc_{event}_nsim{simulations}_proc{processors}_chi{chi}.npz"
         save(max_z12_power, filename)
