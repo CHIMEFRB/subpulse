@@ -7,10 +7,17 @@ from matplotlib.ticker import AutoMinorLocator
 @click.command()
 @click.option("-f", "--filename", type=str, required=True)
 def plot(filename: str):
+    """
+    Plot subpulse statistics.
+
+    Parameters
+    ----------
+    filename : str
+        [description]
+    """
     data = np.load(filename)
     max_z12_power = data["max_z12_power"]
     print(len(max_z12_power))
-
     fig = plt.figure()
     ax = fig.gca()
     nbins = 25

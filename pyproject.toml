@@ -8,7 +8,6 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = ">=3.7,<3.10"
 click = "^7.1.0"
-maestro = {git = "ssh://git@github.com/CHIMEFRB/maestro.git", branch="main"}
 numpy = "^1.20.2"
 matplotlib = "^3.4.1"
 stingray = "^0.2"
@@ -20,6 +19,7 @@ chime-frb-api = "^2021.5.28"
 pytest = "^6.0.1"
 mkdocs-material = "^5.5.3"
 pre-commit = "^2.6.0"
+black = "^21.6b0"
 
 [build-system]
 requires = ["poetry>=0.12"]
