@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "subpulse"
-version = "2021.05-alpha.0"
+version = "2021.6.0"
 description = "CHIME/FRB Backend - subpulse"
 authors = ["Shiny Brar <charanjotbrar@gmail.com>"]
 license = "MIT"
