@@ -4,13 +4,13 @@ import logging
 import random
 from pathlib import Path
 from typing import List
-from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 import numpy as np
 import stingray.lightcurve as lightcurve
 import stingray.pulse.pulsar as plsr
 from numba import jit
+from tqdm import tqdm
 
 LOG_FORMAT: str = "[%(asctime)s] %(levelname)s "
 LOG_FORMAT += "%(module)s::%(funcName)s():l%(lineno)d: "
