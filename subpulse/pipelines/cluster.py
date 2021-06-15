@@ -24,9 +24,7 @@ from subpulse.utilities.options import PythonLiteralOption
     required=False,
     type=click.INT,
 )
-@click.option(
-    "--jobs", help="Number of jobs to spawn.", type=click.INT, required=True
-)
+@click.option("--jobs", help="Number of jobs to spawn.", type=click.INT, required=True)
 def run(
     event: int,
     arrivals: list,
@@ -42,7 +40,7 @@ def run(
 
     master = frb_master.FRBMaster()
     click.echo(f"Backend: {master.version()}")
-    
+
     for job in range(jobs):
         response = master.swarm.spawn_job(
             job_name=f"subpulse-toa-{event}-{job}",
