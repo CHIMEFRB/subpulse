@@ -4,6 +4,7 @@ import logging
 import random
 from pathlib import Path
 from typing import List
+from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -223,8 +224,7 @@ def execute(
     log.debug("Dataset: ✔️")
     max_z12_power = np.empty(len(toas_mc))
 
-    for index in np.arange(0, len(toas_mc), 1):
-        print(f"Simulation: {index}", flush=True)
+    for index in tqdm(np.arange(0, len(toas_mc), 1), ascii=True, desc="simulating"):
         toa = toas_mc[index]
         error = errors_mc[index]
         z1 = z2search(toa, error, grid)
