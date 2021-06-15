@@ -20,11 +20,12 @@ from subpulse.utilities.options import PythonLiteralOption
     "--simulations",
     help="Number of total simulations to run.",
     default=int(1e8),
+    show_default=True,
     required=False,
     type=click.INT,
 )
 @click.option(
-    "--jobs", help="Job Identification.", default=0, type=click.INT, required=False
+    "--jobs", help="Number of jobs to spawn.", type=click.INT, required=True
 )
 def run(
     event: int,
@@ -40,6 +41,8 @@ def run(
     click.echo(f"Fingerprint: {fingerprint}")
 
     master = frb_master.FRBMaster()
+    click.echo(f"Backend: {master.version()}")
+    
     for job in range(jobs):
         response = master.swarm.spawn_job(
             job_name=f"subpulse-toa-{event}-{job}",
@@ -58,9 +61,9 @@ def run(
                 "--fingerprint",
                 f"{fingerprint}",
                 "--cluster",
-                True,
+                f"{True}",
                 "--job",
-                job,
+                f"{job}",
             ],
             job_cpu_limit=1,
             job_cpu_reservation=1,
