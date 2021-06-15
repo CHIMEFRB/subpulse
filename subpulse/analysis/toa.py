@@ -1,17 +1,23 @@
+"""Time of Arrival Analysis."""
+
 import logging
-import time
+import random
 from pathlib import Path
 from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
-import quantumrandom
 import stingray.lightcurve as lightcurve
 import stingray.pulse.pulsar as plsr
 from numba import jit
 
-logging.basicConfig(format="%(levelname)s:%(message)s")
+LOG_FORMAT: str = "[%(asctime)s] %(levelname)s "
+LOG_FORMAT += "%(module)s::%(funcName)s():l%(lineno)d: "
+LOG_FORMAT += "%(message)s"
+logging.basicConfig(format=LOG_FORMAT, level=logging.ERROR)
 log = logging.getLogger(__name__)
+# Suppress logging from stingray.lightcurve
+logging.getLogger("lightcurve").setLevel(logging.ERROR)
 
 
 @jit(nopython=True)
@@ -163,6 +169,14 @@ def simulate(simulations: int, differences: np.ndarray, minimum: int, maximum: i
 
 
 def save(data: np.ndarray, savepath: Path) -> None:
+    """
+    Save np.ndarray.
+
+    Parameters
+    ----------
+    data : np.ndarray
+    savepath : Path
+    """
     filename = savepath.absolute().as_posix()
     np.savez(filename, max_z12_power=data)
 
@@ -172,7 +186,7 @@ def execute(
     chi: float,
     simulations: int,
     savepath: Path,
-    debug: bool = True,
+    debug: bool = False,
 ) -> None:
     """
     Run the simulation .
@@ -193,9 +207,6 @@ def execute(
     if debug:
         log.setLevel(logging.DEBUG)
     log.debug("Job Recieved: ✔️")
-    # np.random.seed(quantumrandom.get_data()[0])
-    import random
-
     np.random.seed(random.SystemRandom().randint(0, 2147483647))
     log.debug("Random Seed : ✔️")
     grid = frequency_grid()
@@ -213,12 +224,12 @@ def execute(
     max_z12_power = np.empty(len(toas_mc))
 
     for index in np.arange(0, len(toas_mc), 1):
-        log.debug(f"Simulation: {index}")
+        print(f"Simulation: {index}", flush=True)
         toa = toas_mc[index]
         error = errors_mc[index]
         z1 = z2search(toa, error, grid)
         max_index = np.argmax(z1)
-        max_period = 1.0 / grid[max_index]
+        max_period = 1.0 / grid[max_index]  # noqa: F841
         max_z12_power[index] = z1[max_index]
     log.debug("Simulations: ✔️")
     save(max_z12_power, savepath)

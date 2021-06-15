@@ -1,5 +1,10 @@
-import click
+"""Custom class for click option."""
 import ast
+import logging
+
+import click
+
+log = logging.getLogger(__name__)
 
 
 class PythonLiteralOption(click.Option):
@@ -16,5 +21,6 @@ class PythonLiteralOption(click.Option):
         """Cast value to a literal."""
         try:
             return ast.literal_eval(value)
-        except:
+        except Exception as error:
+            log.error(error)
             raise click.BadParameter(value)

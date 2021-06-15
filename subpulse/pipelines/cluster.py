@@ -1,18 +1,31 @@
 """Sample Pipeline."""
 import time
+
 import click
 from chime_frb_api import frb_master
 
-from subpulse.analysis import toa
 from subpulse.utilities.options import PythonLiteralOption
 
 
 @click.command()
-@click.option("--event", required=True, type=click.INT)
-@click.option("--arrivals", cls=PythonLiteralOption, required=True)
-@click.option("--chi", default=0.0, type=click.FLOAT)
-@click.option("--jobs", default=1, type=click.INT)
-@click.option("--simulations", default=int(1e8), type=click.INT)
+@click.option("--event", help="CHIME/FRB Event Number", required=True, type=click.INT)
+@click.option(
+    "--arrivals",
+    help="List of TOAs, e.g. '[0.01, 0.002]' ",
+    cls=PythonLiteralOption,
+    required=True,
+)
+@click.option("--chi", default=0.0, show_default=True, type=click.FLOAT)
+@click.option(
+    "--simulations",
+    help="Number of total simulations to run.",
+    default=int(1e8),
+    required=False,
+    type=click.INT,
+)
+@click.option(
+    "--jobs", help="Job Identification.", default=0, type=click.INT, required=False
+)
 def run(
     event: int,
     arrivals: list,
@@ -20,22 +33,7 @@ def run(
     jobs: int,
     simulations: int,
 ) -> None:
-    """
-    Run the subpulse analysis.
-
-    Parameters
-    ----------
-    event : int
-        [description]
-    arrivals : list
-        [description]
-    chi : float
-        [description]
-    jobs : int
-        [description]
-    simulations : int
-        [description]
-    """
+    """Run the subpulse analysis on the CHIME/FRB Cluster."""
     click.echo("Running Subpulse TOA Analysis")
     click.echo(f"Parameters : {locals()}")
     fingerprint = int(time.time())

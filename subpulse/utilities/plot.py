@@ -1,3 +1,4 @@
+"""Subpulse plotting utilities."""
 import click
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,7 +43,7 @@ def plot(filename: str):
     ax.set_yscale("log")
 
     ax.set_title(
-        r"$\mathcal{N}_{\mathregular{sim}}$ = 10$^{\mathregular{6}}$ simultations ($\chi$ = 0.20)",
+        r"$\mathcal{N}_{\mathregular{sim}}$ = 10$^{\mathregular{6}}$ simultations ($\chi$ = 0.20)",  # noqa: E501
         fontsize=12.0,
         fontname="Helvetica",
     )
