@@ -37,8 +37,10 @@ def plot(filename: str):
         color="b",
         edgecolor="k",
     )
-
-    ax.axvline(22.32, color="k", linestyle="--", linewidth=2.5)
+    
+    #detecton_bar = 22.32
+    detection_bar = 17.96141909472610009857
+    ax.axvline(detection_bar, color="k", linestyle="--", linewidth=2.5)
 
     ax.set_yscale("log")
 
@@ -55,9 +57,9 @@ def plot(filename: str):
     )
 
     ax.text(
-        22.32 - 0.65,
+        detection_bar - 0.65,
         0.12,
-        r"$\mathregular{Z}_{\mathregular{1}}^{\mathregular{2}}$ = 22.32 @ 217.3 ms",
+        r"$\mathregular{Z}_{\mathregular{1}}^{\mathregular{2}}$ = 17.96 @ 217.3 ms",
         fontsize=12.0,
         color="k",
         rotation=90.0,
@@ -94,7 +96,7 @@ def plot(filename: str):
 
     minorLocator_xaxis = AutoMinorLocator(2)
     ax_dummyx.xaxis.set_minor_locator(minorLocator_xaxis)
-    idx = np.where(max_z12_power > 22.32)[0]
+    idx = np.where(max_z12_power > detection_bar)[0]
     print(len(idx))
     plt.show()
 

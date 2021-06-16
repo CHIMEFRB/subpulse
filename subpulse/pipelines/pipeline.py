@@ -79,13 +79,13 @@ def run(
         )
         base_path.mkdir(parents=True, exist_ok=True)
         filename = (
-            f"mc_{event}_nsim{simulations}_chi{str(chi).replace('.','p')}_{job}.npz"
+            f"mc_{event}_nsim{simulations}_chi{str(chi)}_{job}.npz"
         )
     else:
         base_path = Path.cwd() / f"{event}/{fingerprint}"
         base_path.mkdir(parents=True, exist_ok=True)
         filename = (
-            f"mc_{event}_nsim{simulations}_chi{str(chi).replace('.','p')}_{job}.npz"
+            f"mc_{event}_nsim{simulations}_chi{str(chi)}_{job}.npz"
         )
 
     log.debug(f"Base Path: {base_path}")
