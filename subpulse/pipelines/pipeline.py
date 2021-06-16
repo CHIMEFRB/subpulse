@@ -79,7 +79,7 @@ def run(
         )
         base_path.mkdir(parents=True, exist_ok=True)
         filename = f"mc_{event}_nsim{simulations}_chi%.2f_{job}.npz" % chi
-    
+
     else:
         base_path = Path.cwd() / f"{event}/{fingerprint}"
         base_path.mkdir(parents=True, exist_ok=True)
