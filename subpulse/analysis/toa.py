@@ -8,7 +8,6 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import stingray.lightcurve as lightcurve
-import stingray.pulse.pulsar as plsr
 from numba import jit
 from tqdm import tqdm
 
@@ -20,8 +19,34 @@ log = logging.getLogger(__name__)
 # Suppress logging from stingray.lightcurve
 logging.getLogger("lightcurve").setLevel(logging.ERROR)
 
+FACTORIAL_LOOKUP_TABLE = np.array(
+    [
+        1,
+        1,
+        2,
+        6,
+        24,
+        120,
+        720,
+        5040,
+        40320,
+        362880,
+        3628800,
+        39916800,
+        479001600,
+        6227020800,
+        87178291200,
+        1307674368000,
+        20922789888000,
+        355687428096000,
+        6402373705728000,
+        121645100408832000,
+        2432902008176640000,
+    ],
+    dtype="int64",
+)
 
-@jit(nopython=True)
+
 def frequency_grid(
     resolution: float = 0.32768 * 1.0e-3,
     samples: float = 250.0,
@@ -44,10 +69,8 @@ def frequency_grid(
     np.ndarray
         [description]
     """
-    duration = samples * resolution
-    spacing = 1.0 / duration
-    sampling = 1.0 / resolution
-    nyquist = 0.5 * sampling
+    spacing = 1.0 / (samples * resolution)
+    nyquist = 0.5 * (1.0 / resolution)
     return np.arange(
         spacing,
         nyquist + (spacing / oversample),
@@ -55,6 +78,7 @@ def frequency_grid(
     )
 
 
+@jit(nopython=True)
 def parameters(
     arrivals: List[float],
     chi: float,
@@ -83,7 +107,7 @@ def parameters(
     toas = np.array(arrivals) * 0.001
     # np.empty is ~100x faster than np.zeros
     errors = np.zeros(len(toas)) * 0.001
-    differences = np.zeros(len(toas) - 1, dtype=float)
+    differences = np.zeros(len(toas) - 1)
 
     for index in np.arange(0, len(toas) - 1, 1):
         differences[index] = toas[index + 1] - toas[index]
@@ -112,11 +136,103 @@ def z2search(toas: np.ndarray, errors: np.ndarray, grid: np.ndarray) -> np.ndarr
         [description]
     """
     lc = lightcurve.Lightcurve(toas, np.ones(len(toas)), err=errors)
-    z1 = np.empty(grid.size, dtype=float)
+    z1 = np.empty(grid.size)
+    lc_time = lc.time
     for index in np.arange(0, len(grid), 1):
-        phase = plsr.pulse_phase(lc.time, grid[index])
-        z1[index] = plsr.z_n(phase, n=1)
+        phase = pulse_phase(lc_time, grid[index])
+        z1[index] = z_n(phase, n=1)
     return z1
+
+
+@jit(nopython=True)
+def pulse_phase(times, *frequency_derivatives):
+    """
+    Calculate pulse phase from the frequency and its derivatives.
+
+    Parameters
+    ----------
+    times : array of floats
+        The times at which the phase is calculated
+    *frequency_derivatives: floats
+        List of derivatives in increasing order, starting from zero.
+
+    Returns
+    -------
+    phases : array of floats
+        The absolute pulse phase
+    """
+    phase = np.zeros(len(times))
+    for i_f, f in enumerate(frequency_derivatives):
+        factorial = fast_factorial(i_f + 1)
+        phase += 1 / factorial * times ** (i_f + 1) * f
+    phase -= np.floor(phase)
+    return phase
+
+
+@jit(nopython=True)
+def fast_factorial(value: np.int64) -> np.int64:
+    """
+    Factorial.
+
+    Parameters
+    ----------
+    value : np.int64
+        Some integer value.
+
+    Returns
+    -------
+    np.int64
+
+    Raises
+    ------
+    ValueError
+        When value > 20.
+    """
+    if value > 20:
+        raise ValueError("fast_factorial for n>20, not supported.")
+    return FACTORIAL_LOOKUP_TABLE[value]
+
+
+@jit(nopython=True)
+def z_n(phase: np.ndarray, n: int = 2, norm: float = 1.0):
+    """Z^2_n statistics, a` la Buccheri+03, A&A, 128, 245, eq. 2.
+
+    Parameters
+    ----------
+    phase : array of floats
+        The phases of the events
+    n : int, default 2
+        Number of harmonics, including the fundamental
+    norm : float or array of floats
+        A normalization factor that gets multiplied as a weight.
+
+    Returns
+    -------
+    z2_n : float
+        The Z^2_n statistics of the events.
+    """
+    nbin = len(phase)
+    if nbin == 0:
+        return 0
+    normalization = np.array(norm)
+    if normalization.size == 1:
+        total_norm = nbin * normalization
+    else:
+        total_norm = np.sum(normalization)
+    phase = phase * 2 * np.pi
+    return 2 / total_norm * statistic(n, phase, normalization)
+
+
+@jit(nopython=True)
+def statistic(n, phase, norm):
+    """Calculate Z^2 Statistic."""
+    stat = np.empty(n + 1)
+    for k in range(1, n + 1):
+        stat[k - 1] = (
+            np.sum(np.cos(k * phase) * norm) ** 2
+            + np.sum(np.sin(k * phase) * norm) ** 2
+        )
+    return np.sum(stat)
 
 
 def plot(z1: np.ndarray, grid: np.ndarray) -> None:
