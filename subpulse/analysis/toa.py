@@ -2,6 +2,7 @@
 
 import logging
 import random
+import warnings
 from pathlib import Path
 from typing import List
 
@@ -9,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import stingray.lightcurve as lightcurve
 from numba import jit
+from numba.core.errors import NumbaPendingDeprecationWarning
 from tqdm import tqdm
 
 LOG_FORMAT: str = "[%(asctime)s] %(levelname)s "
@@ -18,6 +20,10 @@ logging.basicConfig(format=LOG_FORMAT, level=logging.ERROR)
 log = logging.getLogger(__name__)
 # Suppress logging from stingray.lightcurve
 logging.getLogger("lightcurve").setLevel(logging.ERROR)
+# Supress deprecation messages
+warnings.filterwarnings(action="ignore", category=DeprecationWarning)
+warnings.filterwarnings(action="ignore", category=NumbaPendingDeprecationWarning)
+warnings.filterwarnings(action="ignore", category=UserWarning)
 
 FACTORIAL_LOOKUP_TABLE = np.array(
     [
@@ -135,7 +141,7 @@ def z2search(toas: np.ndarray, errors: np.ndarray, grid: np.ndarray) -> np.ndarr
     np.ndarray
         [description]
     """
-    lc = lightcurve.Lightcurve(toas, np.ones(len(toas)), err=errors)
+    lc = lightcurve.Lightcurve(toas, np.ones(len(toas)), err=errors, skip_checks=True)
     z1 = np.empty(grid.size)
     lc_time = lc.time
     for index in np.arange(0, len(grid), 1):
@@ -340,7 +346,12 @@ def execute(
     log.debug("Dataset: ✔️")
     max_z12_power = np.empty(len(toas_mc))
 
-    for index in tqdm(np.arange(0, len(toas_mc), 1), ascii=True, desc="simulating"):
+    for index in tqdm(
+        np.arange(0, len(toas_mc), 1),
+        ascii=True,
+        desc="simulating",
+        leave=True,
+    ):
         toa = toas_mc[index]
         error = errors_mc[index]
         z1 = z2search(toa, error, grid)
