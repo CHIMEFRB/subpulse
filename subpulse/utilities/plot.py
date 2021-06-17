@@ -38,7 +38,6 @@ def plot(filename: str):
         edgecolor="k",
     )
 
-    # detecton_bar = 22.32
     detection_bar = 17.96141909472610009857
     ax.axvline(detection_bar, color="k", linestyle="--", linewidth=2.5)
 
