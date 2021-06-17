@@ -302,6 +302,7 @@ def save(data: np.ndarray, savepath: Path) -> None:
     """
     filename = savepath.absolute().as_posix()
     np.savez(filename, max_z12_power=data)
+    savepath.chmod(0o777)
 
 
 def execute(
