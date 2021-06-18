@@ -143,24 +143,11 @@ def z2search(toas: np.ndarray, errors: np.ndarray, grid: np.ndarray) -> np.ndarr
     """
     lc = lightcurve.Lightcurve(toas, np.ones(len(toas)), err=errors)
     z1 = np.zeros(grid.size, dtype=np.float64)
-    z1p = np.zeros(grid.size, dtype=np.float64)
     lc_time = lc.time
-    import stingray.pulse.pulsar as plsr
+
     for index in np.arange(0, len(grid), 1):
         phase = pulse_phase(lc_time, grid[index])
         z1[index] = z_n(phase, n=1)
-#        z1p[index] = plsr.z_n(phase, n=1)
-    
-    """ 
-    if (np.array_equal(z1, z1p)):
-        print("SAME!")
-    else:
-        print("NOT SAME :(!")
-        print(z1)
-        print(z1p)
-        1/0
-    """
-    
     return z1
 
 
@@ -240,7 +227,7 @@ def z_n(phase: np.ndarray, n: int = 2, norm: float = 1.0):
     else:
         total_norm = np.sum(normalization)
     phase = phase * 2 * np.pi
-    return 2. / total_norm * statistic(n, phase, normalization)
+    return 2.0 / total_norm * statistic(n, phase, normalization)
 
 
 @jit(nopython=True)
