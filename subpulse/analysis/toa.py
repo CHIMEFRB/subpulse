@@ -16,8 +16,6 @@ LOG_FORMAT += "%(module)s::%(funcName)s():l%(lineno)d: "
 LOG_FORMAT += "%(message)s"
 logging.basicConfig(format=LOG_FORMAT, level=logging.ERROR)
 log = logging.getLogger(__name__)
-# Suppress logging from stingray.lightcurve
-logging.getLogger("lightcurve").setLevel(logging.ERROR)
 # Supress deprecation messages
 warnings.filterwarnings(action="ignore", category=DeprecationWarning)
 warnings.filterwarnings(action="ignore", category=NumbaPendingDeprecationWarning)
@@ -121,6 +119,7 @@ def parameters(
     return toas, errors, differences, minimum, maximum
 
 
+@jit(nopython=True)
 def z2search(toas: np.ndarray, errors: np.ndarray, grid: np.ndarray) -> np.ndarray:
     """
     Lightcurve search.
