@@ -25,6 +25,7 @@ black = "^21.6b0"
 subpulse = "subpulse.pipelines.pipeline:run"
 subpulse-cluster = "subpulse.pipelines.cluster:run"
 subpulse-monitor = "subpulse.utilities.monitor:monitor"
+subpulse-plot = "subpulse.utilities.plot:plot"
 
 [build-system]
 requires = ["poetry>=0.12"]
