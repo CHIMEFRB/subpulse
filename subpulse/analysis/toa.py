@@ -6,9 +6,7 @@ import warnings
 from pathlib import Path
 from typing import List
 
-import matplotlib.pyplot as plt
 import numpy as np
-import stingray.lightcurve as lightcurve
 from numba import jit
 from numba.core.errors import NumbaPendingDeprecationWarning
 from tqdm import tqdm
@@ -141,12 +139,9 @@ def z2search(toas: np.ndarray, errors: np.ndarray, grid: np.ndarray) -> np.ndarr
     np.ndarray
         [description]
     """
-    lc = lightcurve.Lightcurve(toas, np.ones(len(toas)), err=errors)
     z1 = np.zeros(grid.size, dtype=np.float64)
-    lc_time = lc.time
-
     for index in np.arange(0, len(grid), 1):
-        phase = pulse_phase(lc_time, grid[index])
+        phase = pulse_phase(toas, grid[index])
         z1[index] = z_n(phase, n=1)
     return z1
 
@@ -240,22 +235,6 @@ def statistic(n, phase, norm):
             + np.sum(np.sin(k * phase) * norm) ** 2
         )
     return np.sum(stat)
-
-
-def plot(z1: np.ndarray, grid: np.ndarray) -> None:
-    """
-    Plot a 2D array of z1 and grid .
-
-    Parameters
-    ----------
-    z1 : np.ndarray
-        [description]
-    grid : np.ndarray
-        [description]
-    """
-    plt.figure()
-    plt.plot(np.divide(1.0, grid), z1)
-    plt.show()
 
 
 @jit(nopython=True)
