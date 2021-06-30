@@ -50,8 +50,8 @@ FACTORIAL_LOOKUP_TABLE = np.array(
 
 
 def frequency_grid(
-    resolution: float = 0.00786432,
-    samples: float = 536.0,
+    resolution: float = (0.08192 * 1.0e-3),
+    samples: float = 166.0,
     oversample: int = 5,
 ) -> np.ndarray:
     """
