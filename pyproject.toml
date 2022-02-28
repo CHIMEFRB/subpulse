@@ -27,6 +27,12 @@ subpulse-cluster = "subpulse.pipelines.cluster:run"
 subpulse-monitor = "subpulse.utilities.monitor:monitor"
 subpulse-plot = "subpulse.utilities.plot:plot"
 
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.0.1"
+tag_format = "$version"
+version_files = ["pyproject.toml:version"]
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
