@@ -3,21 +3,21 @@ name: Tests
 on:
   push:
     paths-ignore:
-      - 'docs/**'
-    branches: [ main ]
+      - "docs/**"
+    branches: [main]
   pull_request:
     paths-ignore:
-      - 'docs/**'
+      - "docs/**"
     branches:
-      - '**'
+      - "**"
 
 jobs:
   pre-commit-checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v7
         with:
           python-version: 3.7
       - name: Linting
@@ -27,19 +27,16 @@ jobs:
 
   tests:
     needs: pre-commit-checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-    - uses: webfactory/ssh-agent@v0.4.1
-      with:
-          ssh-private-key: ${{ secrets.CHIMEFRB_BOT_SSH_PRIVATE_KEY }}
-    - name: Installation
-      run: |
-        pip install --upgrade pip
-        pip install poetry
-        poetry install
-    - name: Run Tests
-      run: |
-        poetry run pytest
+      - uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+      - name: Installation
+        run: |
+          pip install --upgrade pip
+          pip install poetry
+          poetry install
+      - name: Run Tests
+        run: |
+          poetry run pytest
